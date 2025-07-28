@@ -3,14 +3,35 @@ class ZetamacPopup {
   constructor() {
     this.scores = [];
     this.currentView = 'chart';
+    this.theme = localStorage.getItem('zetamac-theme') || 'dark';
     this.init();
   }
 
   async init() {
+    this.setTheme(this.theme);
     await this.loadScores();
     this.setupEventListeners();
     this.updateStats();
     this.renderChart();
+  }
+
+  setTheme(theme) {
+    this.theme = theme;
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('zetamac-theme', theme);
+    
+    const toggle = document.getElementById('themeToggle');
+    toggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+    
+    // Re-render chart with new theme colors
+    if (this.currentView === 'chart') {
+      this.renderChart();
+    }
+  }
+
+  toggleTheme() {
+    const newTheme = this.theme === 'dark' ? 'light' : 'dark';
+    this.setTheme(newTheme);
   }
 
   async loadScores() {
@@ -24,6 +45,10 @@ class ZetamacPopup {
   }
 
   setupEventListeners() {
+    document.getElementById('themeToggle').addEventListener('click', () => {
+      this.toggleTheme();
+    });
+
     document.getElementById('showChart').addEventListener('click', () => {
       this.switchView('chart');
     });
@@ -67,10 +92,11 @@ class ZetamacPopup {
     const today = new Date().toISOString().split('T')[0];
     const todayGames = this.scores.filter(s => s.date === today).length;
 
-    document.getElementById('totalGames').textContent = totalGames;
-    document.getElementById('bestScore').textContent = bestScore;
-    document.getElementById('avgScore').textContent = avgScore;
-    document.getElementById('todayGames').textContent = todayGames;
+    // Format numbers with separators for better readability
+    document.getElementById('totalGames').textContent = totalGames.toLocaleString();
+    document.getElementById('bestScore').textContent = bestScore.toLocaleString();
+    document.getElementById('avgScore').textContent = avgScore.toLocaleString();
+    document.getElementById('todayGames').textContent = todayGames.toLocaleString();
   }
 
   renderChart() {
@@ -88,11 +114,17 @@ class ZetamacPopup {
     // Clear canvas
     ctx.clearRect(0, 0, width, height);
     
+    // Get theme colors
+    const isDark = this.theme === 'dark';
+    const gridColor = isDark ? '#404040' : '#c1d9f0';
+    const lineColor = isDark ? '#00ff88' : '#4a90e2';
+    const textColor = isDark ? '#e8e8e8' : '#1e3a5f';
+    
     if (this.scores.length === 0) {
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-      ctx.font = '14px Arial';
+      ctx.fillStyle = textColor;
+      ctx.font = '12px "SF Mono", "Monaco", monospace';
       ctx.textAlign = 'center';
-      ctx.fillText('No data to display', width / 2, height / 2);
+      ctx.fillText('NO DATA AVAILABLE', width / 2, height / 2);
       return;
     }
 
@@ -108,12 +140,12 @@ class ZetamacPopup {
     const chartHeight = height - 2 * padding;
 
     // Draw background grid
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = gridColor;
+    ctx.lineWidth = 0.5;
     
     // Horizontal grid lines
-    for (let i = 0; i <= 5; i++) {
-      const y = padding + (chartHeight / 5) * i;
+    for (let i = 0; i <= 4; i++) {
+      const y = padding + (chartHeight / 4) * i;
       ctx.beginPath();
       ctx.moveTo(padding, y);
       ctx.lineTo(width - padding, y);
@@ -122,12 +154,12 @@ class ZetamacPopup {
 
     // Draw score line
     if (recentScores.length > 1) {
-      ctx.strokeStyle = '#4CAF50';
+      ctx.strokeStyle = lineColor;
       ctx.lineWidth = 2;
       ctx.beginPath();
 
       recentScores.forEach((score, index) => {
-        const x = padding + (chartWidth / (recentScores.length - 1)) * index;
+        const x = padding + (chartWidth / Math.max(recentScores.length - 1, 1)) * index;
         const y = padding + chartHeight - ((score.score - minScore) / scoreRange) * chartHeight;
         
         if (index === 0) {
@@ -140,48 +172,61 @@ class ZetamacPopup {
       ctx.stroke();
 
       // Draw points
-      ctx.fillStyle = '#4CAF50';
+      ctx.fillStyle = lineColor;
       recentScores.forEach((score, index) => {
-        const x = padding + (chartWidth / (recentScores.length - 1)) * index;
+        const x = padding + (chartWidth / Math.max(recentScores.length - 1, 1)) * index;
         const y = padding + chartHeight - ((score.score - minScore) / scoreRange) * chartHeight;
         
         ctx.beginPath();
-        ctx.arc(x, y, 3, 0, 2 * Math.PI);
+        ctx.arc(x, y, 2, 0, 2 * Math.PI);
         ctx.fill();
       });
     }
 
     // Draw labels
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-    ctx.font = '10px Arial';
+    ctx.fillStyle = textColor;
+    ctx.font = '9px "SF Mono", "Monaco", monospace';
     ctx.textAlign = 'left';
-    ctx.fillText(`Min: ${minScore}`, padding, height - 5);
+    ctx.fillText(`MIN: ${minScore}`, padding, height - 5);
     ctx.textAlign = 'right';
-    ctx.fillText(`Max: ${maxScore}`, width - padding, height - 5);
+    ctx.fillText(`MAX: ${maxScore}`, width - padding, height - 5);
+    ctx.textAlign = 'center';
+    ctx.fillText(`LAST ${recentScores.length} GAMES`, width / 2, 12);
   }
 
   renderHistory() {
     const historyList = document.getElementById('historyList');
     
     if (this.scores.length === 0) {
-      historyList.innerHTML = '<div class="no-data">No games recorded yet. Play some games on Zetamac!</div>';
+      historyList.innerHTML = '<div class="no-data">NO GAMES RECORDED</div>';
       return;
     }
 
     // Sort scores by timestamp (newest first)
     const sortedScores = [...this.scores].sort((a, b) => b.timestamp - a.timestamp);
     
-    historyList.innerHTML = sortedScores.slice(0, 10).map(score => {
+    historyList.innerHTML = sortedScores.slice(0, 10).map((score, index) => {
       const date = new Date(score.timestamp);
       const dateStr = date.toLocaleDateString();
       const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       
+      // Calculate performance indicator
+      let indicator = '';
+      if (index < sortedScores.length - 1) {
+        const prevScore = sortedScores[index + 1].score;
+        if (score.score > prevScore) {
+          indicator = '<span class="performance-indicator performance-up"></span>';
+        } else if (score.score < prevScore) {
+          indicator = '<span class="performance-indicator performance-down"></span>';
+        } else {
+          indicator = '<span class="performance-indicator performance-neutral"></span>';
+        }
+      }
+      
       return `
         <div class="history-item">
-          <div>
-            <div class="history-score">${score.score}</div>
-            <div class="history-date">${dateStr} ${timeStr}</div>
-          </div>
+          <div class="history-score">${score.score.toLocaleString()}${indicator}</div>
+          <div class="history-date">${dateStr} • ${timeStr}</div>
         </div>
       `;
     }).join('');
@@ -189,21 +234,24 @@ class ZetamacPopup {
 
   exportData() {
     if (this.scores.length === 0) {
-      alert('No data to export!');
+      alert('NO DATA TO EXPORT');
       return;
     }
 
-    const csvContent = 'Date,Time,Score,Duration\n' + 
+    const csvContent = 'Date,Time,Score,Duration,Timestamp\n' + 
       this.scores.map(score => {
         const date = new Date(score.timestamp);
-        return `${score.date},${score.time},${score.score},${Math.round(score.duration / 1000)}s`;
+        const dateStr = date.toISOString().split('T')[0];
+        const timeStr = date.toTimeString().split(' ')[0];
+        const duration = score.duration ? Math.round(score.duration / 1000) : 'N/A';
+        return `${dateStr},${timeStr},${score.score},${duration}s,${score.timestamp}`;
       }).join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `zetamac-scores-${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `zetamac-tracker-${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
   }

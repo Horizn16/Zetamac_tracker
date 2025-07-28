@@ -3,159 +3,294 @@
 <head>
   <meta charset="utf-8">
   <style>
+    :root {
+      --bg-primary: #0a0a0a;
+      --bg-secondary: #1a1a1a;
+      --bg-card: #2a2a2a;
+      --text-primary: #f8f8f8;
+      --text-secondary: #e8e8e8;
+      --accent: #00ff88;
+      --accent-dim: #00cc6a;
+      --border: #404040;
+      --shadow: rgba(0, 0, 0, 0.5);
+    }
+
+    [data-theme="light"] {
+      --bg-primary: #f0f8ff;
+      --bg-secondary: #e6f3ff;
+      --bg-card: #f0f8ff;
+      --text-primary: #2c3e50;
+      --text-secondary: #1e3a5f;
+      --accent: #4a90e2;
+      --accent-dim: #357abd;
+      --border: #c1d9f0;
+      --shadow: rgba(74, 144, 226, 0.15);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       width: 400px;
       min-height: 500px;
       margin: 0;
       padding: 20px;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
+      font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      transition: all 0.8s ease;
     }
 
     .header {
-      text-align: center;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .title-section {
+      flex: 1;
+    }
+
+    .button-section {
+      flex-shrink: 0;
     }
 
     .header h1 {
       margin: 0;
-      font-size: 24px;
-      font-weight: 300;
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      color: var(--text-primary);
+    }
+
+    .theme-toggle {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      padding: 2px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 10px;
+      font-family: inherit;
+      transition: all 0.8s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      box-sizing: border-box;
+      width: 30px;
+      height: 30px;
+    }
+
+    .theme-toggle:hover {
+      background: var(--accent);
+      color: var(--bg-primary);
+      transform: scale(1.1);
     }
 
     .stats-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 15px;
+      gap: 12px;
       margin-bottom: 20px;
     }
 
     .stat-card {
-      background: rgba(255, 255, 255, 0.1);
-      padding: 15px;
-      border-radius: 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 16px;
+      border-radius: 8px;
       text-align: center;
-      backdrop-filter: blur(10px);
+      transition: all 0.8s ease;
+      box-shadow: 0 2px 4px var(--shadow);
+    }
+
+    .stat-card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 4px 8px var(--shadow);
     }
 
     .stat-value {
-      font-size: 24px;
-      font-weight: bold;
-      margin-bottom: 5px;
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: var(--accent);
+      font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+      letter-spacing: -1px;
     }
 
     .stat-label {
-      font-size: 12px;
-      opacity: 0.8;
+      font-size: 11px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 500;
     }
 
     .chart-container {
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
-      padding: 15px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
       margin-bottom: 20px;
-      backdrop-filter: blur(10px);
+      box-shadow: 0 2px 4px var(--shadow);
     }
 
     .chart-title {
-      font-size: 16px;
-      font-weight: bold;
-      margin-bottom: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
       text-align: center;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     .chart {
       height: 150px;
       position: relative;
+      background: var(--bg-secondary);
+      border-radius: 4px;
     }
 
     .history-section {
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
-      padding: 15px;
-      backdrop-filter: blur(10px);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 2px 4px var(--shadow);
     }
 
     .history-title {
-      font-size: 16px;
-      font-weight: bold;
-      margin-bottom: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     .history-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 8px 0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      transition: all 0.8s ease;
     }
 
     .history-item:last-child {
       border-bottom: none;
     }
 
+    .history-item:hover {
+      background: var(--bg-secondary);
+      margin: 0 -8px;
+      padding: 10px 8px;
+      border-radius: 4px;
+    }
+
     .history-score {
-      font-weight: bold;
-      font-size: 18px;
+      font-weight: 700;
+      font-size: 20px;
+      color: var(--accent);
+      font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
     }
 
     .history-date {
-      font-size: 12px;
-      opacity: 0.8;
+      font-size: 11px;
+      color: var(--text-secondary);
+      font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
     }
 
     .no-data {
       text-align: center;
-      opacity: 0.7;
-      padding: 20px;
+      color: var(--text-secondary);
+      padding: 24px;
+      font-size: 14px;
     }
 
     .controls {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       margin-bottom: 20px;
     }
 
     button {
       flex: 1;
-      padding: 10px;
-      border: none;
-      border-radius: 5px;
-      background: rgba(255, 255, 255, 0.2);
-      color: white;
+      padding: 10px 16px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg-card);
+      color: var(--text-primary);
       cursor: pointer;
       font-size: 12px;
-      transition: all 0.3s ease;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: all 0.8s ease;
+      font-family: inherit;
     }
 
     button:hover {
-      background: rgba(255, 255, 255, 0.3);
+      background: var(--bg-secondary);
+      border-color: var(--accent);
     }
 
     button.active {
-      background: rgba(255, 255, 255, 0.4);
+      background: var(--accent);
+      color: var(--bg-primary);
+      border-color: var(--accent);
     }
 
     .progress-bar {
       width: 100%;
-      height: 4px;
-      background: rgba(255, 255, 255, 0.2);
+      height: 3px;
+      background: var(--border);
       border-radius: 2px;
       overflow: hidden;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
     }
 
     .progress-fill {
       height: 100%;
-      background: #4CAF50;
-      transition: width 0.3s ease;
+      background: var(--accent);
+      transition: width 0.8s ease;
+    }
+
+    .performance-indicator {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      margin-left: 8px;
+    }
+
+    .performance-up {
+      background: #00ff88;
+    }
+
+    .performance-down {
+      background: #ff4757;
+    }
+
+    .performance-neutral {
+      background: var(--text-secondary);
     }
   </style>
 </head>
 <body>
   <div class="header">
-    <h1>🔢 Zetamac Tracker</h1>
+    <div class="title-section">
+      <h1>⚡ ZETAMAC TRACKER</h1>
+    </div>
+    <div class="button-section">
+      <button class="theme-toggle" id="themeToggle">🌙</button>
+    </div>
   </div>
 
   <div class="stats-grid">
