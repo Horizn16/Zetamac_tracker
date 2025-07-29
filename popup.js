@@ -88,9 +88,14 @@ class ZetamacPopup {
     const bestScore = totalGames > 0 ? Math.max(...this.scores.map(s => s.score)) : 0;
     const avgScore = totalGames > 0 ? Math.round(this.scores.reduce((sum, s) => sum + s.score, 0) / totalGames) : 0;
     
-    // Today's games
-    const today = new Date().toISOString().split('T')[0];
-    const todayGames = this.scores.filter(s => s.date === today).length;
+    // Today's games - use system local time
+    const now = new Date();
+    const todayGames = this.scores.filter(s => {
+      const d = new Date(s.timestamp);
+      return d.getFullYear() === now.getFullYear() &&
+             d.getMonth() === now.getMonth() &&
+             d.getDate() === now.getDate();
+    }).length;
 
     // Format numbers with separators for better readability
     document.getElementById('totalGames').textContent = totalGames.toLocaleString();
@@ -207,7 +212,10 @@ class ZetamacPopup {
     
     historyList.innerHTML = sortedScores.slice(0, 10).map((score, index) => {
       const date = new Date(score.timestamp);
-      const dateStr = date.toLocaleDateString();
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      const dateStr = `${day}/${month}/${year}`;
       const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       
       // Calculate performance indicator
